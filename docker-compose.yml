@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app_teste
+    ports:
+      - "8080:8080"
+    depends_on:
+        db:
+          condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/db_teste
+      - SPRING_DATASOURCE_USERNAME=luiz
+      - SPRING_DATASOURCE_PASSWORD=123456
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: luiz  # Define o usuário do banco de dados
+      POSTGRES_PASSWORD: 123456  # Define a senha do usuário
+      POSTGRES_DB: db_teste  # Nome do banco de dados a ser criado
+    ports:
+      - "5432:5432"  # Mapeia a porta 5432 do container para a porta 5432 da máquina host
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persistência dos dados
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U luiz -d db_teste"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+
+volumes:
+  postgres_data:
